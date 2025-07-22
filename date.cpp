@@ -91,7 +91,7 @@ class Date {
             m -= 12;
             y++;
         }
-        if ((y % 4 == 0) && d > 28) {
+        if (m == 2 && (y % 4 == 0) && d > 28) {
             d -= 28;
             m++;
         }
@@ -99,11 +99,48 @@ class Date {
         ret.day = d;
         ret.month = m;
         ret.year = y;
+        ret.valid = true;
         return ret;
+    }
+
+    Date sub(const Date& other) const {
+        Date result;
+        int y = static_cast<int>(year) - static_cast<int>(other.year);
+        int m = static_cast<int>(month) - static_cast<int>(other.month);
+        int d = static_cast<int>(day) - static_cast<int>(other.day);
+
+        // Adjust days and months if needed
+        if (d < 0) {
+            m--;
+            // Get days in previous month
+            int prevMonth = month == 1 ? 12 : month - 1;
+            int prevYear = month == 1 ? year - 1 : year;
+            static const int daysInMonth[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+            int days = daysInMonth[prevMonth - 1];
+            // Leap year check for February
+            if (prevMonth == 2 && ((prevYear % 4 == 0 && prevYear % 100 != 0) || (prevYear % 400 == 0))) {
+                days = 29;
+            }
+            d += days;
+        }
+        if (m < 0) {
+            y--;
+            m += 12;
+        }
+
+        result.year = y;
+        result.month = m;
+        result.day = d;
+        result.valid = true;
+        return result;
     }
 
     Date operator+(const Date& other) const {
         return add(other);
+    }
+
+    Date operator-(const Date& other) const {
+        return sub(other);
     }
 
     bool operator==(const Date& other) const {
@@ -256,6 +293,44 @@ int main() {
         printf("(%s).add(%s) = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
     } else {
         printf("(%s).add(%s) = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    }
+
+    // Test -
+    d1 = Date::parse("0005-01-30");
+    d2 = Date::parse("0002-01-31");
+    d3 = d1 - d2;
+    if (d3.day == 30 && d3.month == 11 && d3.year == 2) {
+        printf("%s - %s = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("%s - %s = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    }
+
+    d1 = Date::parse("0004-03-01");
+    d2 = Date::parse("0002-01-19");
+    d3 = d1 - d2;
+    if (d3.day == 11 && d3.month == 1 && d3.year == 2) {
+        printf("%s - %s = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("%s - %s = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    }
+
+    d1 = Date::parse("0002-02-28");
+    d2 = Date::parse("0001-01-15");
+    d3 = d1 - d2;
+    if (d3.day == 13 && d3.month == 1 && d3.year == 1) {
+        printf("%s - %s = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("%s - %s = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    }
+
+    // Test sub
+    d1 = Date::parse("0005-01-30");
+    d2 = Date::parse("0002-01-31");
+    d3 = d1.sub(d2);
+    if (d3.day == 30 && d3.month == 11 && d3.year == 2) {
+        printf("(%s).sub(%s) = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("(%s).sub(%s) = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
     }
 
     return 0;
