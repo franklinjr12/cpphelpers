@@ -79,6 +79,33 @@ class Date {
         return std::string(buffer);
     }
 
+    Date add(const Date& other) const {
+        auto d = day + other.day;
+        auto m = month + other.month;
+        auto y = year + other.year;
+        if (d > 31) {
+            m++;
+            d -= 31;
+        }
+        if (m > 12) {
+            m -= 12;
+            y++;
+        }
+        if ((y % 4 == 0) && d > 28) {
+            d -= 28;
+            m++;
+        }
+        Date ret;
+        ret.day = d;
+        ret.month = m;
+        ret.year = y;
+        return ret;
+    }
+
+    Date operator+(const Date& other) const {
+        return add(other);
+    }
+
     bool operator==(const Date& other) const {
         return year == other.year && month == other.month && day == other.day;
     }
@@ -191,6 +218,44 @@ int main() {
         printf("parseFormated() correctly fails for invalid format.\n");
     } else {
         printf("parseFormated() should have failed for invalid format.\n");
+    }
+
+    // Test +
+    d1 = Date::parse("0001-01-10");
+    d2 = Date::parse("0001-01-15");
+    d3 = d1 + d2;
+    if (d3.day == 25 && d3.month == 2 && d3.year == 2) {
+        printf("%s + %s = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("%s + %s = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    }
+
+    d1 = Date::parse("0002-01-10");
+    d2 = Date::parse("0002-01-19");
+    d3 = d1 + d2;
+    if (d3.day == 1 && d3.month == 3 && d3.year == 4) {
+        printf("%s + %s = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("%s + %s = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    }
+
+    d1 = Date::parse("0002-11-30");
+    d2 = Date::parse("0002-01-31");
+    d3 = d1 + d2;
+    if (d3.day == 30 && d3.month == 1 && d3.year == 5) {
+        printf("%s + %s = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("%s + %s = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    }
+
+    // Test add
+    d1 = Date::parse("0002-11-30");
+    d2 = Date::parse("0002-01-31");
+    d3 = d1.add(d2);
+    if (d3.day == 30 && d3.month == 1 && d3.year == 5) {
+        printf("(%s).add(%s) = %s works\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
+    } else {
+        printf("(%s).add(%s) = %s fails\n", d1.toString().c_str(), d2.toString().c_str(), d3.toString().c_str());
     }
 
     return 0;
